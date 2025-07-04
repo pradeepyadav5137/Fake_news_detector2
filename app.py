@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from dotenv import load_dotenv
 from textblob import TextBlob
 import hashlib
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -955,6 +956,7 @@ def log_prediction(article_text, prediction, confidence, references_found):
 def main():
     # Load models
     with st.spinner("🔍 Loading model..."):
+                time.sleep(3)
                 model, vectorizer = load_models()
     
     # Render UI components
