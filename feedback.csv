@@ -1,0 +1,3 @@
+session_id,timestamp,article_text,prediction,confidence,emoji_feedback,emoji_label,emoji_rating,feedback_type,accuracy_rating,speed_rating,ui_rating,overall_rating,detailed_comments,improvement_areas
+d4293fc8,2025-07-04T14:34:05.513637,India defeats South Africa to win ICC T20 World Cup 2024 in a thrilling final match at Barbados,Real,0.8897899029026035,😊,Good,4,positive,3,3,5,5,,Result Explanation
+6a9a9213,2025-07-04T14:46:51.441375,Scientists claim to have discovered universal cure for all diseases using advanced AI technology,Fake,0.6585865146419335,😠,Terrible,1,negative,1,1,1,1,,None

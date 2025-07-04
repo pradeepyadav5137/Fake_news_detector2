@@ -44,3 +44,4 @@ timestamp,news,prediction,confidence,references_found
 2025-07-04T10:44:57.123515,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
 2025-07-04T10:45:41.640500,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
 2025-07-04T10:46:00.339249,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-04T12:08:34.672009,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
