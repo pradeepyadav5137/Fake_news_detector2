@@ -113,7 +113,7 @@ st.markdown("""
 /* Feedback section */
 .feedback-section {
     background: rgba(255,255,255,0.1);
-    padding: 20px;
+    padding-top: 15px;
     border-radius: 15px;
     margin-top: 20px;
     backdrop-filter: blur(10px);
@@ -124,10 +124,11 @@ st.markdown("""
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin: 15px 0;
+    margin: 15px 0px;
 }
 
 .feedback-button {
+    margin: 100px 0px;
     padding: 10px 20px;
     border: none;
     border-radius: 25px;
@@ -141,6 +142,18 @@ st.markdown("""
 .feedback-button:hover {
     transform: scale(1.1);
     background: rgba(255,255,255,0.3);
+}
+
+
+.stButton > button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: bold;
+    color: white;
+    transition: all 0.3s ease;
+    margin: 20px 0px;
 }
 
 /* Statistics cards */
@@ -667,21 +680,19 @@ def render_input():
         - Real-time verification with cross-referencing
         """)
         
-        # Sample articles - now properly bound to session state
-        st.markdown("#### 🎯 Try Samples")
-        sample_articles = [
-            "India defeats South Africa to win ICC T20 World Cup 2024 in a thrilling final match at Barbados",
-            "रवींद्र जडेजा WTC के इतिहास में पहले ऐसे खिलाड़ी बन गए हैं जिनके नाम 2000 रन और 100 विकेट दर्ज है। उनके अलावा दुनिया में कोई भी खिलाड़ी इस उपलब्धि को हासिल नहीं कर पाया है।",
-            "Scientists claim to have discovered universal cure for all diseases using advanced AI technology"
-        ]
-        
-        for i, sample in enumerate(sample_articles):
+    st.markdown("#### 🎯 Try Sample Articles")
+    sample_articles = [
+        "India defeats South Africa to win ICC T20 World Cup 2024 in a thrilling final match at Barbados",
+        "रवींद्र जडेजा WTC के इतिहास में पहले ऐसे खिलाड़ी बन गए हैं जिनके नाम 2000 रन और 100 विकेट दर्ज है। उनके अलावा दुनिया में कोई भी खिलाड़ी इस उपलब्धि को हासिल नहीं कर पाया है।",
+        "Scientists claim to have discovered universal cure for all diseases using advanced AI technology"
+    ]
+    button_cols = st.columns(3)
+    for i, col in enumerate(button_cols):
+        with col:
             if st.button(f"Sample {i+1}", key=f"sample_{i}", use_container_width=True):
-                # Set session state instead of temporary variable
-                st.session_state.article_text = sample
-                # Trigger rerun to update text area
+                st.session_state.article_text = sample_articles[i]
                 st.rerun()
-    
+                
     return st.session_state.article_text
 
 
@@ -691,13 +702,13 @@ def render_feedback_section(session_id, article_text, prediction, confidence):
     st.markdown("### 💬 How accurate was this analysis?")
     st.markdown("""
     <div class="feedback-section">
-        <p style="text-align: center; color: white; margin-bottom: 20px;">
+        <p style="text-align: center; color: white;">
             Your feedback helps us improve our AI model!
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Layout for emoji buttons
+    
     cols = st.columns(5)
     feedback_options = [
         ("😍", "Excellent", 5),
@@ -1000,7 +1011,7 @@ def main():
                     st.session_state.refs = refs
                     st.session_state.analysis_done = True
 
-                    # Rerun to display results using the session state values
+        
                     st.rerun()  # terminates this run and starts a new one:contentReference[oaicite:4]{index=4}
                 except Exception as e:
                     st.error(f"❌ Analysis failed: {e}")
