@@ -492,7 +492,80 @@ def get_news_references(article_text, num_results=6):
         if not is_duplicate:
             unique_results.append(result)
     
-    # Final fallback if no results
+    # Try GNews API as an additional fallback
+    for search_query in search_queries:
+        if len(unique_results) >= num_results:
+            break
+        try:
+            gnews_key = get_api_key("GNEWS_API_KEY", "demo")  # Replace 'demo' with your key
+            if gnews_key:
+                params = {
+                    "q": search_query,
+                    "token": gnews_key,
+                    "max": num_results,
+                    "lang": "en"
+                }
+                res = requests.get("https://gnews.io/api/v4/search", params=params, timeout=15)
+                if res.status_code == 200:
+                    for art in res.json().get("articles", []):
+                        if len(unique_results) >= num_results:
+                            break
+                        relevance = calculate_relevance_score(
+                            art["title"],
+                            art.get("description", ""),
+                            query
+                        )
+                        if relevance > 0.1 and not any(r['url'] == art['url'] for r in unique_results):
+                            unique_results.append({
+                                "title": art["title"],
+                                "description": art.get("description", ""),
+                                "url": art["url"],
+                                "source": art.get("source", {}).get("name", "GNews"),
+                                "publishedAt": art.get("publishedAt", datetime.utcnow().isoformat()),
+                                "urlToImage": art.get("image", ""),
+                                "relevance": relevance
+                            })
+        except Exception as e:
+            logging.exception("GNews API Exception")
+    
+    # Try Guardian API for further redundancy
+    for search_query in search_queries:
+        if len(unique_results) >= num_results:
+            break
+        try:
+            guardian_key = get_api_key("GUARDIAN_API_KEY", None)
+            if guardian_key:
+                params = {
+                    "q": search_query,
+                    "api-key": guardian_key,
+                    "page-size": num_results,
+                    "show-fields": "headline,trailText,thumbnail,short-url"
+                }
+                res = requests.get("https://content.guardianapis.com/search", params=params, timeout=15)
+                if res.status_code == 200:
+                    for item in res.json().get("response", {}).get("results", []):
+                        if len(unique_results) >= num_results:
+                            break
+                        title = item.get("webTitle", "")
+                        desc = item.get("fields", {}).get("trailText", "")
+                        relevance = calculate_relevance_score(title, desc, query)
+                        if relevance > 0.1 and not any(r['url'] == item['webUrl'] for r in unique_results):
+                            unique_results.append({
+                                "title": title,
+                                "description": desc,
+                                "url": item["webUrl"],
+                                "source": "The Guardian",
+                                "publishedAt": item.get("webPublicationDate", datetime.utcnow().isoformat()),
+                                "urlToImage": item.get("fields", {}).get("thumbnail", ""),
+                                "relevance": relevance
+                            })
+        except Exception as e:
+            logging.exception("Guardian API Exception")
+    
+    # Sort again after adding new sources
+    unique_results.sort(key=lambda x: x.get('relevance', 0), reverse=True)
+    
+    # Final fallback if still no results
     if not unique_results:
         unique_results.append({
             "title": "No relevant references found",
