@@ -1,0 +1,46 @@
+timestamp,news,prediction,confidence,references_found
+2025-06-26T14:07:23.465158,"India rises in QS World University Rankings 2026, reflecting progress in global education and research",Real,0.6581775518244398,True
+2025-06-26T14:12:02.443712,"s: India rises in QS World University Rankings 2026, reflecting progress in global education and researc",Real,0.6234014316557329,True
+2025-06-26T14:12:55.128926,"ndia has marked its strongest performance in the QS World University Rankings 2026, with 54 institutions featured—up from 46 last year. IIT Delhi led the national list at joint 123rd, its best-ever rank, followed by IIT Bombay and IIT Madras.",Fake,0.877480819240345,True
+2025-06-26T14:14:02.949745,"Apple Unveils iOS 18 with AI Features at WWDC 2024""",Real,0.6094763107403276,True
+2025-06-26T14:14:25.746806,"Nvidia becomes world’s most valuable company, overtaking Microsoft",Fake,0.5638565810633256,True
+2025-06-26T14:14:56.175619,"""India defeats South Africa to win ICC T20 World Cup 2024""",Real,0.8818698656397645,True
+2025-06-26T14:19:26.971803,"""India defeats South Africa to win ICC T20 World Cup 2024""",Real,0.8818698656397645,True
+2025-07-03T13:10:48.950130,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-03T13:11:00.670632,Apple Unveils iOS 18 with AI Features at WWDC 2024,Real,0.6094763107403276,True
+2025-07-03T13:11:18.414330,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T13:11:58.908992,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-03T13:12:26.052587,Apple Unveils iOS 18 with AI Features at WWDC 2024,Real,0.6094763107403276,True
+2025-07-03T13:12:55.438706,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T13:17:55.153309,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T13:18:06.920871,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T13:18:28.926977,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T13:18:44.422446,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-03T13:18:55.436639,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-03T13:25:12.003464,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T14:21:53.732844,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-03T14:22:35.845599,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-03T14:22:49.432343,"PM Modi launched centenary celebrations for Acharya Vidyanand Ji Maharaj, highlighting his spiritual...",Fake,0.6054161170375855,False
+2025-07-03T14:23:10.413602,PM Modi launched centenary celebrations for Acharya Vidyanand Ji Maharaj,Real,0.87902920458657,False
+2025-07-03T14:23:41.982577,The government revised Waste-to-Energy guidelines to boost bioenergy and support MSMEs. New rules ai...,Fake,0.7176867102398817,False
+2025-07-03T14:24:51.672991,The government revised Waste-to-Energy guidelines to boost bioenergy and support MSMEs. New rules ai...,Fake,0.7176867102398817,False
+2025-07-03T14:25:30.455650,"Apache helicopters set for delivery within two weeks after India-U.S. defence talks
+",Real,0.8795538430320018,False
+2025-07-03T14:29:09.229393,"""Won't Get Nobel Prize For Stopping India-Pak War"": Trump Claims Credit Again""
+
+",Real,0.5615569075822728,False
+2025-07-04T09:49:54.384437,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-04T09:53:46.284098,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T09:57:44.500222,"Breaking: Aliens land in New York City, world leaders gather",Fake,0.7867871769001289,True
+2025-07-04T09:58:47.781620,COVID-19 vaccine contains microchips for tracking people,Real,0.5836737662353961,True
+2025-07-04T10:00:05.164810,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T10:00:39.418149,Apple Unveils iOS 18 with AI Features at WWDC 2024,Real,0.6094763107403276,True
+2025-07-04T10:12:57.820632,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T10:14:23.184634,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-04T10:26:35.092403,Scientists claim to have discovered universal cure for all diseases using advanced AI technology,Fake,0.6585865146419335,True
+2025-07-04T10:28:22.131760,Scientists claim to have discovered universal cure for all diseases using advanced AI technology,Fake,0.6585865146419335,True
+2025-07-04T10:36:13.334787,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T10:36:21.560956,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
+2025-07-04T10:44:57.123515,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T10:45:41.640500,India defeats South Africa to win ICC T20 World Cup 2024,Real,0.8818698656397645,True
+2025-07-04T10:46:00.339249,Scientists discover cure for all diseases using AI,Fake,0.6101088338527045,True
