@@ -560,34 +560,23 @@ def render_header():
             fig = px.pie(
                 values=[stats['real_news'], stats['fake_news']], 
                 names=['Real News', 'Fake News'],
-                title="Prediction Distribution",
                 color_discrete_sequence=['#28a745', '#dc3545']
             )
             fig.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='white',
-                height=250
+                height=350,
+                showlegend=True,
+                title=None,
+                font=dict(size=10)
+            )
+            fig.update_traces(
+                textposition='inside', 
+                textinfo='percent+label',
+                textfont_size=9
             )
             st.plotly_chart(fig, use_container_width=True)
-        
-        if feedback_stats['total_feedback'] > 0:
-            # Feedback distribution
-            fig2 = px.bar(
-                x=['Positive', 'Negative'],
-                y=[feedback_stats['positive_feedback'], feedback_stats['negative_feedback']],
-                title="User Feedback",
-                color=['Positive', 'Negative'],
-                color_discrete_map={'Positive': '#28a745', 'Negative': '#dc3545'}
-            )
-            fig2.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font_color='white',
-                height=200,
-                showlegend=False
-            )
-            st.plotly_chart(fig2, use_container_width=True)
 
 
 def render_input():
