@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 from dotenv import load_dotenv
+from textblob import TextBlob
+import hashlib
 
 # Load environment variables from .env file
 load_dotenv()
@@ -108,6 +110,39 @@ st.markdown("""
     box-shadow: 0 4px 16px rgba(220,53,69,0.2);
 }
 
+/* Feedback section */
+.feedback-section {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.feedback-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.feedback-button:hover {
+    transform: scale(1.1);
+    background: rgba(255,255,255,0.3);
+}
+
 /* Statistics cards */
 .stat-card {
     background: rgba(255,255,255,0.1);
@@ -175,12 +210,61 @@ def clean_text(text):
     return text.strip()
 
 def extract_query(text):
-    """Extract meaningful query from article text"""
+    """Extract meaningful query from article text with better keyword extraction"""
     if not text:
         return ""
-    sentences = re.split(r'(?<=[.!?])\s', text)
-    base = (sentences[0] + (" " + sentences[1] if len(sentences) >= 2 else "")) if sentences else text
-    return base.strip().strip('"\'')[:250]
+    
+    # Remove common stop words
+    stop_words = {'the', 'is', 'at', 'which', 'on', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'whose', 'why', 'how', 'when', 'where', 'if', 'or', 'because', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down', 'in', 'out', 'off', 'over', 'under', 'again', 'further', 'then', 'once'}
+    
+    # Extract keywords using TextBlob for better noun phrase extraction
+    try:
+        blob = TextBlob(text)
+        # Get noun phrases
+        noun_phrases = [phrase for phrase in blob.noun_phrases if len(phrase.split()) <= 3]
+        
+        # Get important words (nouns, proper nouns, adjectives)
+        important_words = []
+        for word, pos in blob.tags:
+            if pos in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS'] and word.lower() not in stop_words and len(word) > 2:
+                important_words.append(word)
+        
+        # Combine noun phrases and important words
+        keywords = list(set(noun_phrases + important_words[:10]))
+        
+        # If we have good keywords, use them
+        if keywords:
+            query = ' '.join(keywords[:5])  # Take top 5 keywords
+        else:
+            # Fallback to sentence extraction
+            sentences = re.split(r'(?<=[.!?])\s', text)
+            query = (sentences[0] + (" " + sentences[1] if len(sentences) >= 2 else "")) if sentences else text
+    except:
+        # Fallback to original method if TextBlob fails
+        sentences = re.split(r'(?<=[.!?])\s', text)
+        query = (sentences[0] + (" " + sentences[1] if len(sentences) >= 2 else "")) if sentences else text
+    
+    return query.strip().strip('"\'')[:200]
+
+def calculate_relevance_score(article_title, article_desc, query):
+    """Calculate relevance score between article and query"""
+    query_words = set(query.lower().split())
+    title_words = set(article_title.lower().split())
+    desc_words = set(article_desc.lower().split()) if article_desc else set()
+    
+    # Calculate overlap
+    title_overlap = len(query_words.intersection(title_words)) / len(query_words) if query_words else 0
+    desc_overlap = len(query_words.intersection(desc_words)) / len(query_words) if query_words else 0
+    
+    # Weighted score (title is more important)
+    relevance_score = (title_overlap * 0.7) + (desc_overlap * 0.3)
+    return relevance_score
+
+def generate_session_id():
+    """Generate unique session ID for tracking"""
+    if 'session_id' not in st.session_state:
+        st.session_state.session_id = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
+    return st.session_state.session_id
 
 def test_api_connections():
     """Test all API connections"""
@@ -256,96 +340,142 @@ def get_newsdata_key():
 
 
 
-def get_news_references(article_text, num_results=5):  # Increased from 3 to 5
-    """Fetch news references from multiple APIs with improved error handling"""
+def get_news_references(article_text, num_results=6):
+    """Fetch news references with improved accuracy and relevance scoring"""
     query = extract_query(article_text)
     logging.info(f"Searching for references with query: {query!r}")
     results = []
-
-    # Try Bing News API
-    try:
-        subscription_key = get_api_key("BING_API_KEY", "b44bOb62d7msh4c3029991170245p180afajsn2077ee7fd1eO")
-        endpoint = "https://bing-news-search1.p.rapidapi.com/news/search"
-        headers = {
-            "X-BingApis-SDK": "true",
-            "X-RapidAPI-Key": subscription_key,
-            "X-RapidAPI-Host": "bing-news-search1.p.rapidapi.com"
-        }
-        params = {
-            "q": query, 
-            "count": num_results, 
-            # Removed freshness filter to get older articles too
-            "textFormat": "Raw", 
-            "safeSearch": "Off",
-            "sortBy": "Relevance"  # Sort by relevance instead of date
-        }
-        res = requests.get(endpoint, headers=headers, params=params, timeout=15)  # Increased timeout
-        logging.debug(f"[Bing] {res.status_code} → {res.text}")
-        
-        if res.status_code == 200:
-            for item in res.json().get('value', [])[:num_results]:
-                results.append({
-                    "title": item["name"],
-                    "description": item["description"],
-                    "url": item["url"],
-                    "source": item["provider"][0]["name"],
-                    "publishedAt": item["datePublished"],
-                    "urlToImage": item.get("image", {}).get("thumbnail", {}).get("contentUrl", "")
-                })
-    except Exception as e:
-        logging.exception("Bing API Exception")
-
-    # Try NewsAPI with more flexible parameters
-    if len(results) < num_results:
+    
+    # Try multiple search strategies
+    search_queries = [
+        query,  # Main query
+        ' '.join(query.split()[:3]),  # First 3 words
+        ' '.join(query.split()[-3:]) if len(query.split()) > 3 else query  # Last 3 words
+    ]
+    
+    for search_query in search_queries:
+        if len(results) >= num_results:
+            break
+            
+        # Try Bing News API
+        try:
+            subscription_key = get_api_key("BING_API_KEY", "b44bOb62d7msh4c3029991170245p180afajsn2077ee7fd1eO")
+            endpoint = "https://bing-news-search1.p.rapidapi.com/news/search"
+            headers = {
+                "X-BingApis-SDK": "true",
+                "X-RapidAPI-Key": subscription_key,
+                "X-RapidAPI-Host": "bing-news-search1.p.rapidapi.com"
+            }
+            params = {
+                "q": search_query,
+                "count": num_results,
+                "textFormat": "Raw",
+                "safeSearch": "Off",
+                "sortBy": "Relevance"
+            }
+            res = requests.get(endpoint, headers=headers, params=params, timeout=15)
+            
+            if res.status_code == 200:
+                for item in res.json().get('value', []):
+                    if len(results) >= num_results:
+                        break
+                    
+                    # Calculate relevance score
+                    relevance = calculate_relevance_score(
+                        item["name"], 
+                        item.get("description", ""), 
+                        query
+                    )
+                    
+                    # Only add if relevance is above threshold
+                    if relevance > 0.1:  # Minimum relevance threshold
+                        results.append({
+                            "title": item["name"],
+                            "description": item.get("description", ""),
+                            "url": item["url"],
+                            "source": item["provider"][0]["name"],
+                            "publishedAt": item["datePublished"],
+                            "urlToImage": item.get("image", {}).get("thumbnail", {}).get("contentUrl", ""),
+                            "relevance": relevance
+                        })
+        except Exception as e:
+            logging.exception("Bing API Exception")
+    
+    # Try NewsAPI with different queries
+    for search_query in search_queries:
+        if len(results) >= num_results:
+            break
+            
         try:
             newsapi_key = get_api_key("NEWSAPI_KEY", "07594036124e431aa51b101ac842a868")
             params = {
-                "q": query,
+                "q": search_query,
                 "apiKey": newsapi_key,
                 "pageSize": num_results,
                 "language": "en",
-                "sortBy": "relevancy"  # Sort by relevancy
+                "sortBy": "relevancy"
             }
             res = requests.get("https://newsapi.org/v2/everything", params=params, timeout=15)
-            logging.debug(f"[NewsAPI] {res.status_code} → {res.text}")
             
             if res.status_code == 200:
                 for art in res.json().get("articles", []):
                     if len(results) >= num_results:
                         break
-                    results.append({
-                        "title": art["title"],
-                        "description": art["description"] or "",
-                        "url": art["url"],
-                        "source": art["source"]["name"],
-                        "publishedAt": art["publishedAt"],
-                        "urlToImage": art.get("urlToImage", "")
-                    })
+                    
+                    # Calculate relevance score
+                    relevance = calculate_relevance_score(
+                        art["title"], 
+                        art.get("description", ""), 
+                        query
+                    )
+                    
+                    # Only add if relevance is above threshold and not duplicate
+                    if relevance > 0.1 and not any(r['url'] == art['url'] for r in results):
+                        results.append({
+                            "title": art["title"],
+                            "description": art.get("description", ""),
+                            "url": art["url"],
+                            "source": art["source"]["name"],
+                            "publishedAt": art["publishedAt"],
+                            "urlToImage": art.get("urlToImage", ""),
+                            "relevance": relevance
+                        })
         except Exception as e:
             logging.exception("NewsAPI Exception")
-
-    # Improved fallback - try broader search if no exact matches
-    if not results:
-        try:
-            # Try with just the main keywords
-            keywords = ' '.join(re.findall(r'\b\w{4,}\b', query)[:5])
-            if keywords != query:
-                return get_news_references(keywords, num_results)
-        except:
-            pass
-
-    # Final fallback if still no results
-    if not results:
-        results.append({
-            "title": "No direct references found",
-            "description": "No exact matches found. Try checking these general news sources:",
-            "url": "https://news.google.com",
-            "source": "Google News",
+    
+    # Sort by relevance score
+    results.sort(key=lambda x: x.get('relevance', 0), reverse=True)
+    
+    # Remove duplicates based on title similarity
+    unique_results = []
+    for result in results:
+        is_duplicate = False
+        for existing in unique_results:
+            # Check if titles are too similar (> 80% overlap)
+            title_words1 = set(result['title'].lower().split())
+            title_words2 = set(existing['title'].lower().split())
+            if len(title_words1) > 0 and len(title_words2) > 0:
+                overlap = len(title_words1.intersection(title_words2)) / min(len(title_words1), len(title_words2))
+                if overlap > 0.8:
+                    is_duplicate = True
+                    break
+        
+        if not is_duplicate:
+            unique_results.append(result)
+    
+    # Final fallback if no results
+    if not unique_results:
+        unique_results.append({
+            "title": "No relevant references found",
+            "description": f"No articles found matching '{query}'. This could indicate the news is very recent, local, or potentially fabricated.",
+            "url": "https://news.google.com/search?q=" + query.replace(" ", "+"),
+            "source": "Google News Search",
             "publishedAt": datetime.utcnow().isoformat(),
-            "urlToImage": ""
+            "urlToImage": "",
+            "relevance": 0
         })
-
-    return results[:num_results]
+    
+    return unique_results[:num_results]
 
 # Load model with better error handling
 @st.cache_resource
@@ -377,6 +507,22 @@ def get_prediction_stats():
             logging.exception("Error reading prediction stats")
     return {"total_predictions": 0, "real_news": 0, "fake_news": 0, "avg_confidence": 0, "recent_activity": 0}
 
+def get_feedback_stats():
+    """Get feedback statistics"""
+    feedback_file = "feedback.csv"
+    if os.path.exists(feedback_file):
+        try:
+            df = pd.read_csv(feedback_file)
+            return {
+                "total_feedback": len(df),
+                "positive_feedback": len(df[df['feedback_type'] == 'positive']),
+                "negative_feedback": len(df[df['feedback_type'] == 'negative']),
+                "avg_rating": df['overall_rating'].mean() if 'overall_rating' in df.columns else 0
+            }
+        except Exception as e:
+            logging.exception("Error reading feedback stats")
+    return {"total_feedback": 0, "positive_feedback": 0, "negative_feedback": 0, "avg_rating": 0}
+
 def render_header():
     """Render enhanced header with statistics"""
     st.markdown("""
@@ -390,6 +536,7 @@ def render_header():
     with st.sidebar:
         st.markdown("### 📊 Statistics")
         stats = get_prediction_stats()
+        feedback_stats = get_feedback_stats()
         
         col1, col2 = st.columns(2)
         with col1:
@@ -403,8 +550,8 @@ def render_header():
         with col2:
             st.markdown(f"""
             <div class="stat-card">
-                <div class="stat-number">{stats['recent_activity']}</div>
-                <div class="stat-label">This Week</div>
+                <div class="stat-number">{feedback_stats['total_feedback']}</div>
+                <div class="stat-label">Feedback</div>
             </div>
             """, unsafe_allow_html=True)
         
@@ -420,9 +567,27 @@ def render_header():
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='white',
-                height=300
+                height=250
             )
             st.plotly_chart(fig, use_container_width=True)
+        
+        if feedback_stats['total_feedback'] > 0:
+            # Feedback distribution
+            fig2 = px.bar(
+                x=['Positive', 'Negative'],
+                y=[feedback_stats['positive_feedback'], feedback_stats['negative_feedback']],
+                title="User Feedback",
+                color=['Positive', 'Negative'],
+                color_discrete_map={'Positive': '#28a745', 'Negative': '#dc3545'}
+            )
+            fig2.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white',
+                height=200,
+                showlegend=False
+            )
+            st.plotly_chart(fig2, use_container_width=True)
 
 
 def render_input():
@@ -450,18 +615,18 @@ def render_input():
     with col2:
         st.markdown("#### 💡 Tips")
         st.markdown("""
-        - Include full article text
-        - Headlines work too
+        - Include full article text for better accuracy
+        - Headlines work but full text is preferred
         - Multiple languages supported
-        - Real-time verification
+        - Real-time verification with cross-referencing
         """)
         
         # Sample articles - now properly bound to session state
         st.markdown("#### 🎯 Try Samples")
         sample_articles = [
-            "India defeats South Africa to win ICC T20 World Cup 2024",
-            "Apple Unveils iOS 18 with AI Features at WWDC 2024",
-            "Scientists discover cure for all diseases using AI"
+            "India defeats South Africa to win ICC T20 World Cup 2024 in a thrilling final match at Barbados",
+            "Apple announces groundbreaking iOS 18 with revolutionary AI features at WWDC 2024 conference",
+            "Scientists claim to have discovered universal cure for all diseases using advanced AI technology"
         ]
         
         for i, sample in enumerate(sample_articles):
@@ -472,6 +637,125 @@ def render_input():
                 st.rerun()
     
     return st.session_state.article_text
+
+def render_feedback_section(session_id, article_text, prediction, confidence):
+    """Render feedback section with emoji buttons"""
+    st.markdown("---")
+    st.markdown("### 💬 How accurate was this analysis?")
+    
+    st.markdown("""
+    <div class="feedback-section">
+        <p style="text-align: center; color: white; margin-bottom: 20px;">
+            Your feedback helps us improve our AI model!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Emoji feedback buttons
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    feedback_options = [
+        ("😍", "Excellent", 5),
+        ("😊", "Good", 4),
+        ("😐", "Okay", 3),
+        ("😞", "Poor", 2),
+        ("😠", "Terrible", 1)
+    ]
+    
+    feedback_given = False
+    selected_feedback = None
+    
+    for i, (emoji, label, rating) in enumerate(feedback_options):
+        col = [col1, col2, col3, col4, col5][i]
+        with col:
+            if st.button(f"{emoji}\n{label}", key=f"feedback_{rating}", use_container_width=True):
+                selected_feedback = {
+                    "emoji": emoji,
+                    "label": label,
+                    "rating": rating,
+                    "type": "positive" if rating >= 4 else "negative" if rating <= 2 else "neutral"
+                }
+                feedback_given = True
+    
+    # Additional feedback form
+    if feedback_given or st.session_state.get('show_feedback_form', False):
+        st.session_state.show_feedback_form = True
+        
+        with st.form("detailed_feedback"):
+            st.markdown("#### 📝 Additional Comments (Optional)")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                accuracy_rating = st.slider("Reference Accuracy", 1, 5, 3, 
+                                          help="How accurate were the related news references?")
+                speed_rating = st.slider("Analysis Speed", 1, 5, 4,
+                                        help="How satisfied are you with the analysis speed?")
+            
+            with col2:
+                ui_rating = st.slider("User Interface", 1, 5, 4,
+                                     help="How user-friendly is the interface?")
+                overall_rating = st.slider("Overall Experience", 1, 5, 4,
+                                         help="Your overall experience with TruthLens")
+            
+            detailed_comments = st.text_area("Comments", 
+                                           placeholder="Tell us what we can improve...",
+                                           height=100)
+            
+            # Category selection
+            improvement_areas = st.multiselect(
+                "What areas need improvement?",
+                ["Reference Accuracy", "Analysis Speed", "User Interface", "Result Explanation", "Additional Features"],
+                help="Select all that apply"
+            )
+            
+            submitted = st.form_submit_button("Submit Feedback 📤")
+            
+            if submitted:
+                feedback_data = {
+                    "session_id": session_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "article_text": article_text[:200] + "..." if len(article_text) > 200 else article_text,
+                    "prediction": "Real" if prediction else "Fake",
+                    "confidence": confidence,
+                    "emoji_feedback": selected_feedback["emoji"] if selected_feedback else "😐",
+                    "emoji_label": selected_feedback["label"] if selected_feedback else "Not specified",
+                    "emoji_rating": selected_feedback["rating"] if selected_feedback else 3,
+                    "feedback_type": selected_feedback["type"] if selected_feedback else "neutral",
+                    "accuracy_rating": accuracy_rating,
+                    "speed_rating": speed_rating,
+                    "ui_rating": ui_rating,
+                    "overall_rating": overall_rating,
+                    "detailed_comments": detailed_comments,
+                    "improvement_areas": ", ".join(improvement_areas) if improvement_areas else "None"
+                }
+                
+                # Save feedback
+                save_feedback(feedback_data)
+                
+                st.success("🎉 Thank you for your feedback! Your input helps us improve TruthLens.")
+                st.balloons()
+                
+                # Reset form
+                st.session_state.show_feedback_form = False
+                st.rerun()
+
+def save_feedback(feedback_data):
+    """Save feedback to CSV file"""
+    try:
+        df = pd.DataFrame([feedback_data])
+        feedback_file = "feedback.csv"
+        
+        # Append to existing file or create new one
+        if os.path.exists(feedback_file):
+            df.to_csv(feedback_file, mode='a', header=False, index=False)
+        else:
+            df.to_csv(feedback_file, mode='w', header=True, index=False)
+        
+        logging.info(f"Feedback saved: {feedback_data['emoji_label']} - {feedback_data['overall_rating']}/5")
+        
+    except Exception as e:
+        logging.exception("Failed to save feedback")
+        st.error("Failed to save feedback. Please try again.")
 
 def render_results(pred, conf, refs, article_text):
     """Render enhanced results with better visualization"""
@@ -559,6 +843,10 @@ def render_results(pred, conf, refs, article_text):
 
     # Log the prediction
     log_prediction(article_text, pred, conf, len([r for r in refs if r['title'] != "No references found"]) > 0)
+    
+    # Render feedback section
+    session_id = generate_session_id()
+    render_feedback_section(session_id, article_text, pred, conf)
 
 def log_prediction(article_text, prediction, confidence, references_found):
     """Log prediction with consistent format"""
