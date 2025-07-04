@@ -38,6 +38,7 @@ st.markdown("""
     color: #f0f2f6; 
 }
 
+
 /* Header styling */
 .main-header {
     text-align: center;
@@ -624,7 +625,8 @@ def render_header():
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='white',
-                height=300,
+                height=400,
+                width=400,
                 showlegend=True
             )
             st.plotly_chart(pie, use_container_width=True)
@@ -977,6 +979,15 @@ def main():
             st.session_state.refs, 
             st.session_state.article_text
         )
+        
+        if st.button("🔄 Analyze Another Article", use_container_width=True):
+            # clear everything
+            st.session_state.analysis_done = False
+            st.session_state.article_text = ""
+            for key in ['pred','conf','refs']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
     else:
         # Show Analyze button only if not yet done
         if st.button("🔍 Analyze News Article", use_container_width=True):
