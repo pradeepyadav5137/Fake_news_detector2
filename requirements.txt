@@ -13,3 +13,4 @@ joblib
 scikit-learn
 feedparser
 python-dotenv
+textblob
