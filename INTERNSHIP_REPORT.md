@@ -3,6 +3,13 @@
 ## Abstract
 TruthLens is a Streamlit-based web application that harnesses Natural Language Processing (NLP), Machine Learning (ML) and multiple live news APIs to validate the authenticity of online news articles in real-time.  The system cleans the input text, extracts a concise query, cross-checks the claim against reputable news sources, and finally predicts whether the article is *Real* or *Fake* using a trained Linear-SVC model.  Users are presented with confidence scores, corroborating references, rich analytics and a modern glass-morphism UI.
 
+---
+
+## Certificate with Signatures and Seal of the Industry Person
+> **Note:** This page must be printed and physically signed and sealed by the industry supervisor. Insert the signed copy here in the final bound report.
+
+---
+
 The following document serves two purposes:
 1. A formal **Internship / Project Report** that follows the academic structure provided.
 2. Comprehensive **API & Component Documentation** describing every public function, module and UI component in the code-base, complete with examples and usage instructions.
